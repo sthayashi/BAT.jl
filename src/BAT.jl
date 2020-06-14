@@ -22,6 +22,7 @@ using Colors
 using Distributions
 using DoubleFloats
 using ElasticArrays
+using FFTW
 using FillArrays
 using IntervalSets
 using PDMats
@@ -39,10 +40,14 @@ using UnsafeArrays
 using KernelDensity
 
 import EmpiricalDistributions
+import DiffResults
+import DistributionsAD
 import ForwardDiff
 import Measurements
 import NLSolversBase
 import Optim
+import AdvancedHMC
+import Bijectors
 
 #for AHMI
 using DataStructures
