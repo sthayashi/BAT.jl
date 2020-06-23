@@ -2,5 +2,7 @@
 
 include("onlineuvstats.jl")
 include("onlinemvstats.jl")
-include("autocorr.jl")
+include("autocor.jl")
 include("effective_sample_size.jl")
+include("whiten.jl")
+include("median_estimators.jl")
