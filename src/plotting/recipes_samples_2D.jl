@@ -1,27 +1,27 @@
 # This file is a part of BAT.jl, licensed under the MIT License (MIT).
 @recipe function f(
     maybe_shaped_samples::DensitySampleVector,
-    parsel::NTuple{2,Union{Symbol, Expr, Integer}};
-    intervals = standard_confidence_vals,
+    vsel::NTuple{2,Union{Symbol, Expr, Integer}};
+    intervals = default_credibilities,
     interval_labels = [],
-    colors = standard_colors,
+    colors = default_colors,
     mean = false,
     std = false,
     globalmode = false,
-    localmode = true,
+    marginalmode = true,
     diagonal = Dict(),
     upper = Dict(),
     right = Dict(),
     filter = false,
     closed = :left
 )
-    xindx = asindex(maybe_shaped_samples, parsel[1])
-    yindx = asindex(maybe_shaped_samples, parsel[2])
+    xindx = asindex(maybe_shaped_samples, vsel[1])
+    yindx = asindex(maybe_shaped_samples, vsel[2])
 
     if length(xindx) > 1
-        throw(ArgumentError("Symbol :$(parsel[1]) refers to a multivariate parameter. Use :($(parsel[1])[i]) instead."))
+        throw(ArgumentError("Symbol :$(vsel[1]) refers to a multivariate parameter. Use :($(vsel[1])[i]) instead."))
     elseif length(yindx) > 1
-        throw(ArgumentError("Symbol :$(parsel[2]) refers to a multivariate parameter. Use :($(parsel[2])[i]) instead."))
+        throw(ArgumentError("Symbol :$(vsel[2]) refers to a multivariate parameter. Use :($(vsel[2])[i]) instead."))
     end
 
     samples = unshaped.(maybe_shaped_samples)
@@ -44,7 +44,7 @@
     xguide := get(plotattributes, :xguide, xlabel)
     yguide := get(plotattributes, :yguide, ylabel)
 
-    marg = bat_marginalize(
+    marg = get_marginal_dist(
         samples,
         (xindx, yindx),
         bins = bins,
@@ -103,7 +103,7 @@
 
     mean_options = convert_to_options(mean)
     globalmode_options = convert_to_options(globalmode)
-    localmode_options = convert_to_options(localmode)
+    marginalmode_options = convert_to_options(marginalmode)
     std_options = convert_to_options(std)
 
 
@@ -162,32 +162,32 @@
     end
 
 
-    if localmode_options != ()
-        localmode_values = find_localmodes(marg)
-        for (i, l) in enumerate(localmode_values)
+    if marginalmode_options != ()
+        marginalmode_values = find_marginalmodes(marg)
+        for (i, l) in enumerate(marginalmode_values)
          @series begin
             seriestype := :scatter
-            if i==1 && length(localmode_values)==1
-                label := get(localmode_options, "label", "local mode")
+            if i==1 && length(marginalmode_values)==1
+                label := get(marginalmode_options, "label", "local mode")
             elseif i ==1
-                label := get(localmode_options, "label", "local modes")
+                label := get(marginalmode_options, "label", "local modes")
             else
                 label :=""
             end
 
             seriestype == :marginal ? subplot := 3 :
-            markercolor := get(localmode_options, "markercolor", :dimgrey)
-            markersize := get(localmode_options, "markersize", 4)
-            markershape := get(localmode_options, "markershape", :rect)
-            markeralpha := get(localmode_options, "markeralpha", 1)
+            markercolor := get(marginalmode_options, "markercolor", :dimgrey)
+            markersize := get(marginalmode_options, "markersize", 4)
+            markershape := get(marginalmode_options, "markershape", :rect)
+            markeralpha := get(marginalmode_options, "markeralpha", 1)
             linealpha := 0
-            markerstrokealpha := get(localmode_options, "markerstrokealpha", 1)
-            markerstrokecolor := get(localmode_options, "markerstrokecolor", :dimgrey)
-            markerstrokestyle := get(localmode_options, "markerstrokestyle", :solid)
-            markerstrokewidth := get(localmode_options, "markerstrokewidth", 1)
+            markerstrokealpha := get(marginalmode_options, "markerstrokealpha", 1)
+            markerstrokecolor := get(marginalmode_options, "markerstrokecolor", :dimgrey)
+            markerstrokestyle := get(marginalmode_options, "markerstrokestyle", :solid)
+            markerstrokewidth := get(marginalmode_options, "markerstrokewidth", 1)
             colorbar := colorbar
 
-            ([localmode_values[i][1]], [localmode_values[i][2]])
+            ([marginalmode_values[i][1]], [marginalmode_values[i][2]])
             end
         end
     end

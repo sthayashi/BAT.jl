@@ -25,19 +25,19 @@ var_bounds(density::TruncatedDensity) = density.bounds
 ValueShapes.varshape(density::TruncatedDensity) = varshape(parent(density))
 
 
-function logvalof(
+function eval_logval(
     density::TruncatedDensity,
     v::Any,
     T::Type{<:Real} = density_logval_type(v);
     use_bounds::Bool = true,
     strict::Bool = false
 )
-    v_shaped = get_shaped_variate(varshape(density), v)
+    v_shaped = reshape_variate(varshape(density), v)
     if use_bounds && !variate_is_inbounds(density, v_shaped, strict)
         return log_zero_density(T)
     end
 
-    parent_logval = logvalof(
+    parent_logval = eval_logval(
         parent(density), v_shaped,
         use_bounds = false, strict = false
     )  
@@ -46,8 +46,8 @@ function logvalof(
 end
 
 
-function logvalof_unchecked(density::TruncatedDensity, v::Any)
-    logvalof(
+function eval_logval_unchecked(density::TruncatedDensity, v::Any)
+    eval_logval(
         density, v,
         use_bounds = false, strict = false
     )
@@ -179,7 +179,7 @@ function truncate_dist_hard(dist::ConstValueDist, bounds::AbstractVector{<:Inter
 end
 
 function truncate_dist_hard(dist::NamedTupleDist{names}, bounds::AbstractArray{<:Interval}) where names
-    @argcheck length(eachindex(bounds)) == length(dist)
+    @argcheck length(eachindex(bounds)) == totalndof(varshape(dist))
     distributions = values(dist)
     accessors = values(varshape(dist))
 

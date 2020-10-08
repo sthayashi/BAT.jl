@@ -32,7 +32,6 @@ Order = [:macro, :function]
 # Documentation
 
 ```@docs
-BAT.AbstractMCMCCallback
 BAT.AbstractProposalDist
 BAT.BasicMvStatistics
 BAT.DataSet
@@ -40,8 +39,6 @@ BAT.HMIData
 BAT.HMISettings
 BAT.IntegrationVolume
 BAT.KDTreePartitioning
-BAT.MCMCCallbackWrapper
-BAT.MCMCSpec
 BAT.OnlineMvCov
 BAT.OnlineMvMean
 BAT.OnlineUvMean
@@ -51,23 +48,27 @@ BAT.SearchResult
 BAT.SpacePartTree
 BAT.TruncatedDensity
 BAT.WhiteningResult
+BAT.MCMCSampleGenerator
 
-BAT.density_logval_type
-BAT.estimate_finite_bounds
+
 BAT.argchoice_msg
 BAT.bat_sampler
 BAT.bg_R_2sqr
-BAT.find_localmodes
-BAT.get_bin_centers
 BAT.create_hypercube
 BAT.create_hyperrectangle
+BAT.density_logval_type
 BAT.distribution_logpdf
 BAT.distribution_logpdf!
 BAT.drop_low_weight_samples
+BAT.estimate_finite_bounds
+BAT.eval_gradlogval
+BAT.eval_logval
 BAT.find_hypercube_centers
+BAT.find_marginalmodes
 BAT.fromuhc
 BAT.fromuhc!
 BAT.fromui
+BAT.get_bin_centers
 BAT.getlikelihood
 BAT.getprior
 BAT.gr_Rsqr
@@ -80,19 +81,18 @@ BAT.is_log_zero
 BAT.issymmetric_around_origin
 BAT.log_volume
 BAT.log_zero_density
-BAT.mcmc_startval!
 BAT.modify_hypercube!
 BAT.modify_integrationvolume!
 BAT.partition_space
 BAT.proposal_rand!
 BAT.reduced_volume_hm
-BAT.renormalize_variate!
 BAT.renormalize_variate_impl
+BAT.renormalize_variate!
 BAT.repetition_to_weights
 BAT.spatialvolume
 BAT.sum_first_dim
+BAT.trunc_logpdf_ratio
 BAT.truncate_density
 BAT.truncate_dist_hard
-BAT.trunc_logpdf_ratio
 BAT.var_bounds
 ```

@@ -1,5 +1,4 @@
 # This file is a part of BAT.jl, licensed under the MIT License (MIT).
-abstract type AbstractSampleGenerator end
 
 # when constructing a without generator infos like `SampledDensity(density, samples)`:
 struct UnknownSampleGenerator<: AbstractSampleGenerator end
@@ -32,7 +31,7 @@ function bat_sample_impl(rng::AbstractRNG, target::AnyIIDSampleable, n::Integer,
 
     # ToDo: Parallelize, using hierarchical RNG (separate RNG for each sample)
     v = nestedview(rand(rng, sampler(density), n))
-    logd = logvalof.(Ref(density), v)
+    logd = eval_logval.(Ref(density), v)
 
     weight = fill(_default_int_WT(1), length(eachindex(logd)))
     info = fill(nothing, length(eachindex(logd)))
@@ -66,10 +65,7 @@ function bat_sample_impl(rng::AbstractRNG, posterior::DensitySampleVector, n::In
     samples = posterior[resampled_idxs]
     samples.weight .= 1
 
-    info = ImportanceSamplerInfo(algorithm)
-    summary = Summary(bat_samples, density, info)
-
-    (result = samples, summary = summary)
+    (result = samples,)
 end
 
 

@@ -19,7 +19,7 @@ function (integrand::CubaIntegrand)(x::AbstractVector{<:Real}, f::AbstractVector
     @assert _cuba_valid_value(logv)
 
     x_trafo = fromuhc(x, vol)
-    logd = logvalof(density, x_trafo)
+    logd = eval_logval(density, x_trafo)
     @assert _cuba_valid_value(logd)
 
     f[first(idxs)] = exp(logd + logv)
@@ -42,7 +42,7 @@ function (integrand::CubaIntegrand)(X::AbstractMatrix{<:Real}, f::AbstractMatrix
 
     x_trafo = fromuhc(nestedview(X), vol)
     @threads for i in idxs2
-        logd = logvalof(density, x_trafo[i])
+        logd = eval_logval(density, x_trafo[i])
         @assert _cuba_valid_value(logd)
         f[first(idxs1), i] = exp(logd + logv)
     end
@@ -209,11 +209,13 @@ end
 export CuhreIntegration
 
 
-function bat_integrate_impl(target::AbstractDensity, algorithm::CuhreIntegration)
-    integrand = CubaIntegrand(target)
+function bat_integrate_impl(target::AnyDensityLike, algorithm::CuhreIntegration)
+    density = convert(AbstractDensity, target)
+
+    integrand = CubaIntegrand(density)
     
     r = Cuba.cuhre(
-        integrand, totalndof(target), 1, nvec = algorithm.nthreads,
+        integrand, totalndof(density), 1, nvec = algorithm.nthreads,
         rtol = algorithm.rtol, atol = algorithm.atol,
         minevals = algorithm.minevals, maxevals = algorithm.maxevals,
         key = algorithm.key
@@ -226,13 +228,8 @@ end
 
 const CubaIntegration = Union{VEGASIntegration, SuaveIntegration, DivonneIntegration, CuhreIntegration}
 
-
-# ToDo: Remove once more generalized init-value generation is in place:
-function bat_integrate_impl(
-    target::Union{Distribution,Histogram},
-    algorithm::CubaIntegration;
-    kwargs...
-)
-    posterior = PosteriorDensity(LogDVal(0), target)
-    bat_integrate_impl(posterior, algorithm; kwargs...)
+function bat_integrate_impl(target::AnyDensityLike, algorithm::CubaIntegration)
+    density = convert(AbstractDensity, target)
+    bat_integrate_impl(density, algorithm)
 end
+

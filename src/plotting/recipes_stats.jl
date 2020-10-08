@@ -21,8 +21,8 @@ function err_ellipsis_path(μ::Vector{<:Real}, Σ::Matrix{<:Real}, confidence::R
 end
 
 
-@recipe function f(stats::MCMCBasicStats, parsel::NTuple{2,Integer})
-    pi_x, pi_y = parsel
+@recipe function f(stats::MCMCBasicStats, vsel::NTuple{2,Integer})
+    pi_x, pi_y = vsel
 
     Σ_all = stats.param_stats.cov
     Σ = [Σ_all[pi_x, pi_x] Σ_all[pi_x, pi_y]; Σ_all[pi_y, pi_x] Σ_all[pi_y, pi_y]]
@@ -30,7 +30,7 @@ end
     μ = stats.param_stats.mean[[pi_x, pi_y]]
     mode_xy = stats.mode[[pi_x, pi_y]]
 
-    conf = standard_confidence_vals
+    conf = default_credibilities
 
     seriescolor --> :darkviolet
     seriesalpha --> 0.75

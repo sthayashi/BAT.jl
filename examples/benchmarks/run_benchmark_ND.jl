@@ -9,7 +9,7 @@ function plot_ks_values_ahmc_vs_mh(ks_res_ahmc::Array{Any},ks_res_mh::Array{Any}
 	x_dim_ticks_t2=Array{String}(undef,n_diff_dims*n_functions)
 
 	xy_func_annot=Array{Array{Float64}}(undef,n_functions)
-	func_annot = ["AHMC","MH"]
+	func_annot = ["HMC","MH"]
 
 	res_ks = [ks_res_ahmc,ks_res_mh]
 
@@ -172,7 +172,7 @@ function plot_time_values(results::Array{Any},n_dim;name="results/time_values")
 end
 
 function create_testfunction_for_dim(i_dim::Integer,maxdim=10)
-    sig = Matrix{Float64}([1.5^2 1.5*2.5*0.4 ; 1.5*2.5*0.4 2.5^2])
+    #sig = Matrix{Float64}([1.5^2 1.5*2.5*0.4 ; 1.5*2.5*0.4 2.5^2])
     sig = Matrix{Float64}(undef,i_dim,i_dim)
     means = Vector{Float64}(undef,i_dim)
 
@@ -206,21 +206,21 @@ function run_ND_benchmark(;
     ks_test_benchmark = true,
     ahmi_benchmark = true)
 
-    ahmi = Matrix{Any}(undef,length(n_dim),length(create_testfunction_for_dim(1))+1)
-    ks_test = Matrix{Any}(undef,length(n_dim),length(create_testfunction_for_dim(1))+1)
-    times = Matrix{Any}(undef,length(n_dim),length(create_testfunction_for_dim(1))+1)
+    ahmi = Matrix{Any}(undef,length(n_dim),length(create_testfunction_for_dim(2))+1)
+    ks_test = Matrix{Any}(undef,length(n_dim),length(create_testfunction_for_dim(2))+1)
+    times = Matrix{Any}(undef,length(n_dim),length(create_testfunction_for_dim(2))+1)
 
     convergence = BrooksGelmanConvergence(
         threshold = 1.6, #Change up
         corrected = false
     )
-    init = MCMCInitStrategy(
+    init = MCMCChainPoolInit(
         init_tries_per_chain = 64..1024,
         max_nsamples_init = 250,
         max_nsteps_init = 2500,
         max_time_init = Inf
     )
-    burnin = MCMCBurninStrategy(
+    burnin = MCMCMultiCycleBurnin(
         max_nsamples_per_cycle = 5000,
         max_nsteps_per_cycle = 20000,
         max_time_per_cycle = Inf,
@@ -244,9 +244,23 @@ function run_ND_benchmark(;
             mcmc_sample = nothing
             tbf = time()
             if isa(algorithm,BAT.MetropolisHastings)
-                mcmc_sample = bat_sample(dis, (n_samples, n_chains),algorithm,max_time = Inf,init = init,burnin = burnin,convergence = convergence,strict = true,filter = true).result
-            elseif isa(algorithm,BAT.AHMC)
-                mcmc_sample = bat_sample(dis, n_samples*n_chains,algorithm,).result
+                mcmc_sample = bat_sample(
+                    dis, n_samples * n_chains,
+                    MCMCSampling(
+                        sampler = algorithm,
+                        nchains = n_chains,
+                        init = init,
+                        burnin = burnin,
+                        convergence = convergence,
+                        strict = true,
+                        nonzero_weights = true
+                    )
+                ).result
+            elseif isa(algorithm,BAT.HamiltonianMC)
+                mcmc_sample = bat_sample(
+                    dis, n_samples*n_chains,
+                    MCMCSampling(sampler = algorithm)
+                ).result
             end
             taf = time()
 
@@ -255,9 +269,23 @@ function run_ND_benchmark(;
                 for i in 1:5
                     tbf = time()
                     if isa(algorithm,BAT.MetropolisHastings)
-                        bat_sample(dis, (n_samples, n_chains),algorithm,max_time = Inf,init = init,burnin = burnin,convergence = convergence,strict = true,filter = true).result
-                    elseif isa(algorithm,BAT.AHMC)
-                        bat_sample(dis, n_samples*n_chains,algorithm).result
+                        bat_sample(
+                            dis, n_samples * n_chains,
+                            MCMCSampling(
+                                sampler = algorithm,
+                                nchains = n_chains,
+                                init = init,
+                                burnin = burnin,
+                                convergence = convergence,
+                                strict = true,
+                                nonzero_weights = true
+                            )
+                        ).result
+                    elseif isa(algorithm,BAT.HamiltonianMC)
+                        bat_sample(
+                            dis, n_samples*n_chains,
+                            MCMCSampling(sampler = algorithm)
+                        ).result
                     end
                     taf = time()
                     time_per_run[i] = taf-tbf
@@ -325,7 +353,7 @@ function run_ND_benchmark(;
 end
 
 function run_ks_ahmc_vs_mh(;n_dim=20:5:35,n_samples=2*10^5, n_chains=4)
-    ks_res_ahmc = run_ND_benchmark(n_dim=n_dim,algorithm=AHMC(), n_samples=n_samples, n_chains=n_chains, time_benchmark=false,ahmi_benchmark=false)[1]
+    ks_res_ahmc = run_ND_benchmark(n_dim=n_dim,algorithm=HamiltonianMC(), n_samples=n_samples, n_chains=n_chains, time_benchmark=false,ahmi_benchmark=false)[1]
     ks_res_mh = run_ND_benchmark(n_dim=n_dim,algorithm=MetropolisHastings(), n_samples=n_samples, n_chains=n_chains, time_benchmark=false,ahmi_benchmark=false)[1]
     plot_ks_values_ahmc_vs_mh(ks_res_ahmc,ks_res_mh,n_dim)
 end

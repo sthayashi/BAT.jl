@@ -1,9 +1,9 @@
 # This file is a part of BAT.jl, licensed under the MIT License (MIT).
 @recipe function f(
     marg::MarginalDist,
-    parsel::NTuple{2,Union{Symbol, Expr, Integer}};
-    intervals = standard_confidence_vals,
-    colors = standard_colors,
+    vsel::NTuple{2,Union{Symbol, Expr, Integer}};
+    intervals = default_credibilities,
+    colors = default_colors,
     diagonal = Dict(),
     upper = Dict(),
     right = Dict(),
@@ -11,11 +11,11 @@
     normalize = true
 )
     _plots_module() != nothing || throw(ErrorException("Package Plots not available, but required for this operation"))
-    hist = marg.dist.h
+    hist = convert(Histogram, marg.dist)
     seriestype = get(plotattributes, :seriestype, :histogram2d)
 
-    xlabel = get(plotattributes, :xguide, "x$(parsel[1])")
-    ylabel = get(plotattributes, :yguide, "x$(parsel[2])")
+    xlabel = get(plotattributes, :xguide, "x$(vsel[1])")
+    ylabel = get(plotattributes, :yguide, "x$(vsel[2])")
 
     # histogram / heatmap
     if seriestype == :histogram2d || seriestype == :histogram || seriestype == :hist
@@ -118,11 +118,11 @@
             seriestype := get(upper, "seriestype", :histogram)
             bins --> get(upper, "nbins", 200)
             normalize --> get(upper, "normalize", true)
-            colors --> get(upper, "colors", standard_colors)
-            intervals --> get(upper, "intervals", standard_confidence_vals)
+            colors --> get(upper, "colors", default_colors)
+            intervals --> get(upper, "intervals", default_credibilities)
             legend --> get(upper, "legend", true)
 
-            marg, parsel[1]
+            marg, vsel[1]
         end
 
         # empty plot (needed since @layout macro not available)
@@ -150,11 +150,11 @@
             yguide --> ylabel
             normalize --> get(diagonal, "normalize", true)
             bins --> get(diagonal, "nbins", 200)
-            colors --> get(diagonal, "colors", standard_colors)
-            intervals --> get(diagonal, "intervals", standard_confidence_vals)
+            colors --> get(diagonal, "colors", default_colors)
+            intervals --> get(diagonal, "intervals", default_credibilities)
             legend --> get(diagonal, "legend", false)
 
-            marg, (parsel[1], parsel[2])
+            marg, (vsel[1], vsel[2])
         end
 
         @series begin
@@ -165,11 +165,11 @@
             yguide := "p("*ylabel*")"
             normalize --> get(right, "normalize", true)
             bins --> get(right, "nbins", 200)
-            colors --> get(right, "colors", standard_colors)
-            intervals --> get(right, "intervals", standard_confidence_vals)
+            colors --> get(right, "colors", default_colors)
+            intervals --> get(right, "intervals", default_credibilities)
             legend --> get(right, "legend", true)
 
-            marg, parsel[2]
+            marg, vsel[2]
         end
 
     else
@@ -181,8 +181,8 @@ end
 
 
 # rectangle bounds
-@recipe function f(bounds::HyperRectBounds, parsel::NTuple{2,Integer})
-    pi_x, pi_y = parsel
+@recipe function f(bounds::HyperRectBounds, vsel::NTuple{2,Integer})
+    pi_x, pi_y = vsel
 
     vol = spatialvolume(bounds)
     vhi = vol.hi[[pi_x, pi_y]]; vlo = vol.lo[[pi_x, pi_y]]

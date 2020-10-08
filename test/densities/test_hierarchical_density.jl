@@ -22,8 +22,8 @@ using Distributions, StatsBase, IntervalSets, ValueShapes, ArraysOfArrays
         @test @inferred(rand(sampler(hd))) isa AbstractVector{<:Real}
         @test @inferred(varshape(hd)) == NamedTupleShape(foo = ScalarShape{Real}(), bar = ScalarShape{Real}(), baz = ArrayShape{Real}(3))
 
-        @test @inferred(BAT.logvalof_unchecked(hd, [2.7, 4.3, 8.7, 8.7, 8.7])) ≈ logpdf(parent_density.foo, 2.7) + logpdf(parent_density.bar, 4.3) + 3 * logpdf(Normal(4.3, 2.7), 8.7)
-        @test @inferred(BAT.logvalof_unchecked(hd, (foo = 2.7, bar = 4.3, baz = fill(8.7, 3)))) ≈ logpdf(parent_density.foo, 2.7) + logpdf(parent_density.bar, 4.3) + 3 * logpdf(Normal(4.3, 2.7), 8.7)
+        @test @inferred(BAT.eval_logval_unchecked(hd, [2.7, 4.3, 8.7, 8.7, 8.7])) ≈ logpdf(parent_density.foo, 2.7) + logpdf(parent_density.bar, 4.3) + 3 * logpdf(Normal(4.3, 2.7), 8.7)
+        @test @inferred(BAT.eval_logval_unchecked(hd, (foo = 2.7, bar = 4.3, baz = fill(8.7, 3)))) ≈ logpdf(parent_density.foo, 2.7) + logpdf(parent_density.bar, 4.3) + 3 * logpdf(Normal(4.3, 2.7), 8.7)
 
         @test @inferred(BAT.var_bounds(hd)) == BAT.HierarchicalDensityBounds(hd)
 
@@ -34,7 +34,7 @@ using Distributions, StatsBase, IntervalSets, ValueShapes, ArraysOfArrays
         @test (@inferred(BAT.renormalize_variate!(fill(NaN, totalndof(hd)), hd_bounds, fill(-1.0, totalndof(hd)))) in hd_bounds) == false
 
         posterior = PosteriorDensity(LogDVal(0), hd)
-        samples = bat_sample(posterior, (10^5, 4), MetropolisHastings()).result
+        samples = bat_sample(posterior, 10^5, MCMCSampling(sampler = MetropolisHastings())).result
         isapprox(cov(unshaped.(samples)), cov(hd), rtol = 0.05)
     end
 

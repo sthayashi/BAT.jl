@@ -13,17 +13,15 @@ end
 
 @recipe function f(
     origmarg::MarginalDist,
-    parsel::Union{Integer, Symbol, Expr};
-    intervals = standard_confidence_vals,
-    normalize = true,
-    colors = standard_colors,
+    vsel::Union{Integer, Symbol, Expr};
+    intervals = default_credibilities,
+    colors = default_colors,
     interval_labels = []
 )
-    indx = asindex(origmarg, parsel)
+    indx = asindex(origmarg, vsel)
 
-    marg = bat_marginalize(origmarg, (indx, )).result
-    hist = marg.dist.h
-    normalize ? hist=StatsBase.normalize(hist) : nothing
+    marg = get_marginal_dist(origmarg, (indx, )).result
+    hist = convert(Histogram, marg.dist)
 
     orientation = get(plotattributes, :orientation, :vertical)
     (orientation != :vertical) ? swap = true : swap = false
