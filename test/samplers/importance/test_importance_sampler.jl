@@ -8,8 +8,12 @@ using Random, Distributions, StatsBase
 
 @testset "importance_samplers" begin
     function test_moments(dist::AnyDensityLike, algo::BAT.AbstractSamplingAlgorithm; rtol::Real=0.01)
+<<<<<<< HEAD
         # ToDo: Wrap in @inferred when type stable
         samples = bat_sample(dist, algo).result
+=======
+        samples = @inferred(bat_sample(dist, algo)).result
+>>>>>>> 4b85bbb (Move tests for importance samplers to its own file)
 
         @test isapprox(@inferred(mean(samples)), @inferred(mean(dist)), rtol=rtol)
         @test isapprox(@inferred(var(samples)), @inferred(var(dist)), rtol=rtol)
